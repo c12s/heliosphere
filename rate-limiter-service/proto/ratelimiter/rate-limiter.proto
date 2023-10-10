@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+option go_package = "proto/ratelimiter";
+
+package ratelimiter;
+
+service RateLimitService {
+    rpc CreateRateLimiter (CreateRateLimiterRequest) returns (RateLimiter);
+    rpc GetRateLimiter (GetRateLimiterRequest) returns (RateLimiter);
+    rpc GetAllRateLimiters(EmptyRequest) returns (ListOfRateLimiters);
+    rpc UpdateRateLimiter (UpdateRateLimiterRequest) returns (RateLimiter);
+    rpc DeleteRateLimiter (DeleteRateLimiterRequest) returns (DeleteRateLimiterResponse);
+    rpc CanRateLimiterAllowRequest(AllowRequest) returns (AllowResponse);
+  }
+  
+  message RateLimiter {
+    string id = 1;
+    string name = 2;
+    string userName = 3;
+    string type = 4;
+    int64 reqPerSec = 5;
+    int64 burst = 6;
+  }
+
+  message EmptyRequest{}
+
+  message ListOfRateLimiters{
+    repeated RateLimiter limiters = 1;
+  }
+
+  message CreateRateLimiterRequest{
+    RateLimiter rateLimiter = 1;
+  }
+
+  message UpdateRateLimiterRequest{
+    RateLimiter rateLimiter = 1;
+  }
+  
+  message GetRateLimiterRequest {
+    string id = 1;
+  }
+  
+  message DeleteRateLimiterRequest {
+    string id = 1;
+  }
+
+  message DeleteRateLimiterResponse{
+    bool deleted = 1;
+  }
+
+  message AllowRequest {
+    string id = 1;
+  }
+
+  message AllowResponse{
+    bool allowed = 1;
+  }
