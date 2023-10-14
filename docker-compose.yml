@@ -1,0 +1,54 @@
+version: "3.8"
+
+services:
+
+  consul:
+    image: hashicorp/consul:latest
+    ports:
+      - "8500:8500"
+      - "8600:8600/tcp"
+      - "8600:8600/udp"
+    command: "agent -ui -server -bind 0.0.0.0 -client 0.0.0.0 -bootstrap-expect 1"
+    volumes:
+      - ./consul:/consul/data
+    networks:
+      - network
+
+  rate_limiter_service:
+    image: rate_limiter_service
+    container_name: rate_limiter_service
+    hostname: rate_limiter_service
+    build:
+      context: ./rate-limiter-service/
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - consul
+    environment:
+      RATE_LIMITER_SERVICE_ADDRESS: ${RATE_LIMITER_SERVICE_ADDRESS}
+      DB: ${DB}
+      DBPORT: ${DBPORT}
+    networks:
+      - network
+
+  api_gateway:
+    image: api_gateway
+    container_name: api_gateway
+    hostname: api_gateway
+    build:
+      context: ./api-gateway/
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      RATE_LIMITER_SERVICE_ADDRESS: rate_limiter_service:8000
+      GATEWAY_ADDRESS: ${GATEWAY_ADDRESS}
+    depends_on:
+      - rate_limiter_service
+    networks:
+      - network
+    ports:
+      - "8000:8000"
+
+networks:
+  network:
+    driver: bridge
