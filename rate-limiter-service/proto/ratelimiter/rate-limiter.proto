@@ -4,13 +4,43 @@ option go_package = "proto/ratelimiter";
 
 package ratelimiter;
 
+import "google/api/annotations.proto";
+
 service RateLimitService {
-    rpc CreateRateLimiter (CreateRateLimiterRequest) returns (RateLimiter);
-    rpc GetRateLimiter (GetRateLimiterRequest) returns (RateLimiter);
-    rpc GetAllRateLimiters(EmptyRequest) returns (ListOfRateLimiters);
-    rpc UpdateRateLimiter (UpdateRateLimiterRequest) returns (RateLimiter);
-    rpc DeleteRateLimiter (DeleteRateLimiterRequest) returns (DeleteRateLimiterResponse);
-    rpc CanRateLimiterAllowRequest(AllowRequest) returns (AllowResponse);
+    rpc CreateRateLimiter (CreateRateLimiterRequest) returns (RateLimiter){
+        option (google.api.http) = {
+            post: "/ratelimiter"
+            body: "rateLimiter"
+          };
+    }
+    rpc GetRateLimiter (GetRateLimiterRequest) returns (RateLimiter){
+        option (google.api.http) = {
+            get: "/ratelimiter/{id}"
+          };
+    }
+    rpc GetAllRateLimiters(EmptyRequest) returns (ListOfRateLimiters){
+        option (google.api.http) = {
+            get: "/ratelimiter"
+          };
+    }
+    rpc UpdateRateLimiter (UpdateRateLimiterRequest) returns (RateLimiter){
+        option (google.api.http) = {
+            put: "/ratelimiter"
+            body: "rateLimiter"
+          };
+    }
+    rpc DeleteRateLimiter (DeleteRateLimiterRequest) returns (DeleteRateLimiterResponse){
+        option (google.api.http) = {
+            delete: "/ratelimiter/{id}"
+          };
+    }
+
+    rpc CanRateLimiterAllowRequest(AllowRequest) returns (AllowResponse){
+        option (google.api.http) = {
+          get: "/ratelimiter/allow/{id}"
+        };
+    }
+
   }
   
   message RateLimiter {

@@ -25,29 +25,13 @@ services:
     depends_on:
       - consul
     environment:
-      RATE_LIMITER_SERVICE_ADDRESS: ${RATE_LIMITER_SERVICE_ADDRESS}
       DB: ${DB}
       DBPORT: ${DBPORT}
     networks:
       - network
-
-  api_gateway:
-    image: api_gateway
-    container_name: api_gateway
-    hostname: api_gateway
-    build:
-      context: ./api-gateway/
-      dockerfile: Dockerfile
-    restart: always
-    environment:
-      RATE_LIMITER_SERVICE_ADDRESS: rate_limiter_service:8000
-      GATEWAY_ADDRESS: ${GATEWAY_ADDRESS}
-    depends_on:
-      - rate_limiter_service
-    networks:
-      - network
     ports:
-      - "8000:8000"
+      - "8090:8090"
+      - "8080:8080"
 
 networks:
   network:
