@@ -11,6 +11,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/reflection"
 )
 
 func main() {
@@ -37,6 +38,7 @@ func main() {
 
 	// Attach the RateLimit service to the server
 	pb.RegisterRateLimitServiceServer(grpcServer, rateLimiterHandler)
+	reflection.Register(grpcServer)
 	// Serve gRPC server
 	log.Println("Serving gRPC on 0.0.0.0:8080")
 	go func() {
