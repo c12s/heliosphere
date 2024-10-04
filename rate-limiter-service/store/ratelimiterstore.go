@@ -6,6 +6,7 @@ import (
 	"log"
 	"rate-limiter-service/config"
 	pb "rate-limiter-service/proto/ratelimiter"
+	"strings"
 	"time"
 
 	"github.com/RussellLuo/slidingwindow"
@@ -155,8 +156,13 @@ func (rs *RateLimiterStore) Delete(ctx context.Context, id string) (*pb.DeleteRa
 func (rs *RateLimiterStore) IsRequestAllowed(ctx context.Context, id string) (*pb.AllowResponse, error) {
 	rateLimiter, err := rs.Get(ctx, id)
 	if err != nil {
-		log.Printf("%v", err)
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("Ratelimiter %s not found.", id))
+		log.Printf("%v Default rate-limiter will be created.", err)
+		mtdUsername := strings.Split(id, "-")
+		rateLimiter, err = rs.createDefault(ctx, mtdUsername[0], mtdUsername[1])
+		if err != nil {
+			log.Printf("%v", err)
+			return nil, status.Error(codes.NotFound, fmt.Sprintf("Ratelimiter %s not found or could not be created.", id))
+		}
 	}
 
 	rs.createOrUpdateLimiter(rateLimiter, false)
@@ -165,14 +171,13 @@ func (rs *RateLimiterStore) IsRequestAllowed(ctx context.Context, id string) (*p
 	case "tokenBucket":
 		limiter, ok := rs.rateLimiters[rateLimiter.Id].(*rate.Limiter)
 		if ok {
-			log.Printf("broj dostupnih tokena: %f", limiter.Tokens())
+			log.Printf("Num of available tokens: %f", limiter.Tokens())
 			allowed := limiter.Allow()
-			log.Printf("%v", allowed)
 			return &pb.AllowResponse{
 				Allowed: allowed,
 			}, nil
 		}
-		return nil, fmt.Errorf("ne moz da se preuzme limiter iz mape")
+		return nil, fmt.Errorf("limiter not found")
 	case "leakyBucket":
 		limiter := rs.rateLimiters[rateLimiter.Id].(ratelimit.Limiter)
 		limiter.Take()
@@ -220,4 +225,17 @@ func (rs *RateLimiterStore) createOrUpdateLimiter(rateLimiter *pb.RateLimiter, f
 	rs.rateLimiters[rateLimiter.Id] = limiter
 
 	return nil
+}
+
+// default rl is created for each method on first method call
+func (rs *RateLimiterStore) createDefault(ctx context.Context, mtdName string, username string) (*pb.RateLimiter, error) {
+	limiter := &pb.CreateRateLimiterRequest{RateLimiter: &pb.RateLimiter{
+		Burst:     1,
+		Name:      mtdName,
+		ReqPerSec: 1,
+		Type:      "tokenBucket",
+		UserName:  username,
+	},
+	}
+	return rs.Create(ctx, limiter)
 }
