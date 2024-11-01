@@ -9,7 +9,7 @@ type Config struct {
 
 func GetConfig() Config {
 	return Config{
-		DB:     os.Getenv("DB"),
-		DBPort: os.Getenv("DBPORT"),
+		DB:     os.Getenv("DB_CONSUL"),
+		DBPort: os.Getenv("DBPORT_CONSUL"),
 	}
 }
