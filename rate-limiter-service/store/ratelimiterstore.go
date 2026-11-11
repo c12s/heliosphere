@@ -19,8 +19,10 @@ import (
 )
 
 type RateLimiterStore struct {
-	cli          *api.Client
-	rateLimiters map[string]interface{}
+	cli              *api.Client
+	rateLimiters     map[string]interface{}
+	defaultReqPerSec int64
+	defaultBurst     int64
 }
 
 func New() (*RateLimiterStore, error) {
@@ -36,8 +38,10 @@ func New() (*RateLimiterStore, error) {
 	}
 
 	return &RateLimiterStore{
-		cli:          client,
-		rateLimiters: make(map[string]interface{}),
+		cli:              client,
+		rateLimiters:     make(map[string]interface{}),
+		defaultReqPerSec: cfg.DefaultReqPerSec,
+		defaultBurst:     cfg.DefaultBurst,
 	}, nil
 }
 
@@ -230,9 +234,9 @@ func (rs *RateLimiterStore) createOrUpdateLimiter(rateLimiter *pb.RateLimiter, f
 // default rl is created for each method on first method call
 func (rs *RateLimiterStore) createDefault(ctx context.Context, mtdName string, username string) (*pb.RateLimiter, error) {
 	limiter := &pb.CreateRateLimiterRequest{RateLimiter: &pb.RateLimiter{
-		Burst:     1,
+		Burst:     rs.defaultBurst,
 		Name:      mtdName,
-		ReqPerSec: 1,
+		ReqPerSec: rs.defaultReqPerSec,
 		Type:      "tokenBucket",
 		UserName:  username,
 	},
